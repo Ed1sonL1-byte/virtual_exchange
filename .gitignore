@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.env
+*.db
+.venv/
+venv/
+node_modules/
+dist/
+.DS_Store
+alembic/versions/*.pyc
