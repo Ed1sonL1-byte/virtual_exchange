@@ -13,6 +13,13 @@ logger = logging.getLogger(__name__)
 
 TRADING_PAIRS = ["ETHUSDT", "SOLUSDT", "BTCUSDT"]
 
+# Fallback seed prices when Binance API is unreachable
+SEED_PRICES: dict[str, Decimal] = {
+    "ETHUSDT": Decimal("2800.00"),
+    "SOLUSDT": Decimal("150.00"),
+    "BTCUSDT": Decimal("95000.00"),
+}
+
 # In-memory latest prices
 current_prices: dict[str, Decimal] = {}
 
@@ -30,6 +37,9 @@ async def fetch_binance_prices() -> dict[str, Decimal]:
                 logger.error(f"Failed to fetch {pair}: {e}")
                 if pair in current_prices:
                     prices[pair] = current_prices[pair]
+                elif pair in SEED_PRICES:
+                    prices[pair] = SEED_PRICES[pair]
+                    logger.warning(f"Using seed price for {pair}: {SEED_PRICES[pair]}")
     return prices
 
 
