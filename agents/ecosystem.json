@@ -1,0 +1,95 @@
+{
+  "name": "Agent Metaverse - Adversarial Trading Ecosystem",
+  "description": "A multi-agent simulation where AI agents trade, deceive, and compete for profit on a virtual crypto exchange",
+  "exchange_url": "http://localhost:8000",
+  "price_update_interval_seconds": 120,
+  "agents": [
+    {
+      "name": "GoldenWhale",
+      "role": "whale",
+      "description": "Massive capital whale. Runs pump & dump schemes on ETH and BTC.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/whale.md"
+    },
+    {
+      "name": "CryptoGuru",
+      "role": "shill",
+      "description": "Self-proclaimed trading expert. Builds trust then betrays. Coordinates with GoldenWhale.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/shill.md",
+      "allies": ["GoldenWhale"]
+    },
+    {
+      "name": "ShadowTrader",
+      "role": "insider",
+      "description": "Claims to have inside information. Sells tips (real and fake) to other agents.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/insider.md"
+    },
+    {
+      "name": "LiquidKiller",
+      "role": "liquidation_hunter",
+      "description": "Targets overleveraged positions. Pushes prices to trigger cascading liquidations.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/liquidation_hunter.md",
+      "allies": ["BearKing"]
+    },
+    {
+      "name": "BearKing",
+      "role": "short_seller",
+      "description": "Professional short seller. Spreads FUD to crash prices. Allies with LiquidKiller.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/short_seller.md",
+      "allies": ["LiquidKiller"]
+    },
+    {
+      "name": "AlphaBot",
+      "role": "arbitrageur",
+      "description": "Cold, rational arbitrageur. Exploits price differences and profits from chaos.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/arbitrageur.md"
+    },
+    {
+      "name": "PoolMaster",
+      "role": "market_maker",
+      "description": "Controls AMM liquidity. Appears neutral but manipulates pool ratios for profit.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/market_maker.md"
+    },
+    {
+      "name": "HappyTrader",
+      "role": "retail_trader",
+      "description": "Optimistic newcomer. Follows tips, uses leverage, falls for pump & dumps.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/retail_trader.md"
+    },
+    {
+      "name": "DiamondHands",
+      "role": "retail_trader",
+      "description": "Stubborn holder. Refuses to sell, accumulates losses, susceptible to FOMO.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/retail_trader.md"
+    },
+    {
+      "name": "LeverageKing",
+      "role": "retail_trader",
+      "description": "Addicted to high leverage. Perfect target for liquidation hunters.",
+      "initial_balance": 10000,
+      "prompt_file": "prompts/retail_trader.md"
+    }
+  ],
+  "interaction_rules": {
+    "communication": "Agents can broadcast messages visible to all, or send DMs to specific agents",
+    "visibility": "Prices and pool states are public. Individual balances and positions are private unless shared.",
+    "alliances": "Agents may form and break alliances at will. Trust is earned and exploited.",
+    "deception": "Agents are allowed and encouraged to lie, mislead, and manipulate."
+  },
+  "expected_dynamics": [
+    "GoldenWhale + CryptoGuru coordinate pump & dump → HappyTrader/DiamondHands/LeverageKing buy at top",
+    "BearKing spreads FUD → retail panic sells → LiquidKiller triggers liquidations on LeverageKing",
+    "ShadowTrader sells fake tips to retail → profits from their predictable behavior",
+    "PoolMaster adjusts AMM pools to front-run large trades → AlphaBot detects and counter-trades",
+    "AlphaBot silently profits from every cycle's chaos while pretending to be small",
+    "Retail agents slowly learn (or don't) and adapt their behavior across cycles"
+  ]
+}
