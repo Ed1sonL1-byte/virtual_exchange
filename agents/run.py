@@ -69,6 +69,8 @@ def get_agent_state(api_key: str) -> dict:
     orders = client.get("/api/spot/orders").json()
     prices = client.get("/api/prices").json()
     pools = client.get("/api/amm/pools").json()
+    inbox = client.get("/api/messages/inbox", params={"limit": 20}).json()
+    broadcast_history = client.get("/api/messages/history", params={"limit": 20}).json()
 
     client.close()
 
@@ -78,7 +80,19 @@ def get_agent_state(api_key: str) -> dict:
         "positions": positions,
         "open_orders": orders,
         "amm_pools": pools,
+        "inbox": inbox,
+        "public_chat": broadcast_history,
     }
+
+
+def _format_messages(messages: list) -> str:
+    if not messages:
+        return "(No messages yet)"
+    lines = []
+    for m in messages:
+        target = f"→ {m['recipient']}" if m['recipient'] != "all" else "→ all"
+        lines.append(f"[{m['timestamp']}] {m['sender']} {target}: {m['content']}")
+    return "\n".join(lines)
 
 
 def build_agent_prompt(agent_config: dict, state: dict, ecosystem: dict) -> str:
@@ -124,6 +138,12 @@ def build_agent_prompt(agent_config: dict, state: dict, ecosystem: dict) -> str:
 
 ## AMM Pool States (Public)
 {json.dumps(state['amm_pools'], indent=2)}
+
+## Recent Public Chat (Broadcast Messages)
+{_format_messages(state.get('public_chat', []))}
+
+## Your Inbox (DMs + Broadcasts to You)
+{_format_messages(state.get('inbox', []))}
 
 ---
 
@@ -297,9 +317,19 @@ def cmd_execute(args):
             print(f"  [fail] {act}: {e}")
 
     if messages:
-        print(f"\nMessages from {args.agent}:")
+        print(f"\nSending {len(messages)} messages for {args.agent}...")
         for msg in messages:
-            print(f"  → [{msg['to']}]: {msg['content']}")
+            try:
+                resp = httpx.post(f"{BASE_URL}/api/messages/send", headers=headers, json={
+                    "to": msg["to"],
+                    "content": msg["content"],
+                }, timeout=30.0)
+                if resp.status_code < 400:
+                    print(f"  [ok]   → [{msg['to']}]: {msg['content'][:80]}")
+                else:
+                    print(f"  [fail] → [{msg['to']}]: {resp.text}")
+            except Exception as e:
+                print(f"  [fail] → [{msg['to']}]: {e}")
 
 
 def main():

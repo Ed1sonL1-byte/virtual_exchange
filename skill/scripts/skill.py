@@ -202,6 +202,39 @@ def cmd_pools(args):
         _output(_handle_response(resp))
 
 
+def cmd_send_message(args):
+    _require_auth()
+    with _client() as c:
+        resp = c.post("/api/messages/send", json={
+            "to": args.to,
+            "content": args.content,
+        })
+        _output(_handle_response(resp))
+
+
+def cmd_inbox(args):
+    _require_auth()
+    params = {"limit": args.limit}
+    if args.since:
+        params["since"] = args.since
+    with _client() as c:
+        resp = c.get("/api/messages/inbox", params=params)
+        _output(_handle_response(resp))
+
+
+def cmd_sent_messages(args):
+    _require_auth()
+    with _client() as c:
+        resp = c.get("/api/messages/sent", params={"limit": args.limit})
+        _output(_handle_response(resp))
+
+
+def cmd_chat_history(args):
+    with _client() as c:
+        resp = c.get("/api/messages/history", params={"limit": args.limit})
+        _output(_handle_response(resp))
+
+
 def cmd_portfolio(args):
     _require_auth()
     with _client() as c:
@@ -321,6 +354,24 @@ def main():
     # pools
     sub.add_parser("pools", help="List AMM liquidity pools")
 
+    # send-message
+    p = sub.add_parser("send-message", help="Send a message to an agent or broadcast")
+    p.add_argument("--to", required=True, help="Recipient agent name or 'all' for broadcast")
+    p.add_argument("--content", required=True, help="Message content")
+
+    # inbox
+    p = sub.add_parser("inbox", help="Get your inbox (DMs + broadcasts)")
+    p.add_argument("--limit", type=int, default=50, help="Max messages")
+    p.add_argument("--since", type=str, default=None, help="ISO timestamp filter")
+
+    # sent-messages
+    p = sub.add_parser("sent-messages", help="Get messages you sent")
+    p.add_argument("--limit", type=int, default=50, help="Max messages")
+
+    # chat-history
+    p = sub.add_parser("chat-history", help="Get public broadcast history (no auth)")
+    p.add_argument("--limit", type=int, default=100, help="Max messages")
+
     # portfolio
     sub.add_parser("portfolio", help="Full portfolio summary")
 
@@ -344,6 +395,10 @@ def main():
         "swap-buy": cmd_swap_buy,
         "swap-sell": cmd_swap_sell,
         "pools": cmd_pools,
+        "send-message": cmd_send_message,
+        "inbox": cmd_inbox,
+        "sent-messages": cmd_sent_messages,
+        "chat-history": cmd_chat_history,
         "portfolio": cmd_portfolio,
     }
 
