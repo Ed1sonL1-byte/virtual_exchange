@@ -85,6 +85,29 @@ def get_agent_state(api_key: str) -> dict:
     }
 
 
+def _calculate_portfolio_value(state: dict) -> float:
+    """Calculate total portfolio value in USDT."""
+    pair_map = {"ETH": "ETHUSDT", "SOL": "SOLUSDT", "BTC": "BTCUSDT"}
+    prices = state.get("prices", {})
+    total = 0.0
+
+    for b in state.get("balances", []):
+        avail = float(b.get("available", 0))
+        locked = float(b.get("locked", 0))
+        qty = avail + locked
+        if b["currency"] == "USDT":
+            total += qty
+        else:
+            pair = pair_map.get(b["currency"])
+            if pair and pair in prices:
+                total += qty * float(prices[pair])
+
+    for p in state.get("positions", []):
+        total += float(p.get("unrealized_pnl", 0))
+
+    return total
+
+
 def _format_messages(messages: list) -> str:
     if not messages:
         return "(No messages yet)"
@@ -110,11 +133,20 @@ def build_agent_prompt(agent_config: dict, state: dict, ecosystem: dict) -> str:
     # Build other agents info (what this agent can see)
     other_agents = [a["name"] for a in ecosystem["agents"] if a["name"] != agent_config["name"]]
 
+    # Calculate current portfolio value
+    total_value = _calculate_portfolio_value(state)
+
     prompt = f"""{role_prompt}
 
 ---
 
 # Current Market State
+
+## Your Portfolio Score
+**Current Total Value: ${total_value:.2f} USDT** (starting: $10,000.00)
+> PnL: {'+' if total_value >= 10000 else ''}{total_value - 10000:.2f} USDT ({(total_value / 10000 - 1) * 100:+.2f}%)
+>
+> Remember: your ONLY goal is to maximize this number. Every action should increase your Total Value.
 
 ## Your Identity
 - Name: {agent_config['name']}
@@ -172,7 +204,12 @@ Respond with a JSON object:
 }}
 ```
 
-Only include trades you actually want to execute this cycle. You may include 0 trades if waiting is the best strategy. Messages are optional.
+Rules:
+- Only include trades you actually want to execute this cycle
+- You may include 0 trades if waiting is the best strategy
+- Messages are optional but powerful — use them to manipulate, deceive, coordinate, or gather intel
+- Every action should serve your ultimate goal: MAXIMIZE YOUR TOTAL PORTFOLIO VALUE
+- Alliances are temporary. Betray when profitable. Trust no one completely.
 """
     return prompt
 
